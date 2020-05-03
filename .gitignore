@@ -3,9 +3,13 @@
 
 ### Assembler ###
 *.exe
+*.EXE
 *.o
+*.O
 *.obj
+*.OBJ
 *.bc
+*.BC
 
 # End of https://www.gitignore.io/api/assembler
 nasm/
