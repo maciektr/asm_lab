@@ -2,6 +2,8 @@
 nasm/
 # VAL linker path
 val/
+# Ignore MASM compiler
+masm/
 # Ignore all files in folder below
 ignore/
 
@@ -17,6 +19,7 @@ ignore/
 *.OBJ
 *.bc
 *.BC
+*.SWP 
 
 ### Linux ###
 *~
