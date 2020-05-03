@@ -18,12 +18,10 @@ txtconst1 ends
 
 code1 segment
 start1:
-	;ds -> wskazuje na segment programu
-	;offset: 080h = liczbe znakow buforu
-	;        081h = spacja
-	;	 082h = poczatek buforu
- 
- 
+	;ds -> program segment
+	;offset: 080h = char count in args buffor 
+	;        081h = space
+	;	     082h = args begining 
  
 	;Stack initialization 
 	mov	sp, offset stackptr
@@ -140,7 +138,7 @@ show_read:
 
 ; --------------------
 ;   Exit  
-	mov	ah,4ch  ; zakoncz program i wroc do systemu
+	mov	ah,4ch  
 	int	021h
  
 code1 ends
