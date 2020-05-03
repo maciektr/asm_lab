@@ -98,11 +98,14 @@ a2_start:
 	mov	es,ax
 	mov	si,offset passphrase ;   es:[si]
     inc bp
+    ; Copy current value of bp
+    mov bx, bp
+    ; Store number of currently read chars in cx
+    xor cx,cx
 a3_start:	
 	mov	al, byte ptr ds:[082h + bp]
-	mov	byte ptr es:[si],al
-	inc	bp  ; bp++
-	inc	si  ; si++
+	inc	bp  
+    inc cx
 
     cmp al,0
     je a3_end
@@ -112,10 +115,21 @@ a3_start:
     je a3_end
     cmp al,3
     je a3_end
+    cmp cx,BUF_SIZE_C
+    jge a3_end
 
-	loop	a3_start
+    ; Copy read char to var
+    mov	byte ptr es:[si],al
+	inc	si  
+
+	jmp	a3_start
  a3_end:
-    
+    ; If read less than BUF_SIZE_C chars, repeat reading
+    mov bp,bx
+    cmp cx,BUF_SIZE_C
+    jl a3_start
+    ; Terminate string
+    mov	byte ptr es:[si],"$"
     pop cx
     ; ret
 ; --------------------
