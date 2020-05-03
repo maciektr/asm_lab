@@ -1,3 +1,4 @@
+; compiled with nasm 2.14.02 and then linked with val
 cpu 8086
 
 segment dane .data
