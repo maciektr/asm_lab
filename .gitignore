@@ -4,6 +4,11 @@ nasm/
 val/
 # Ignore MASM compiler
 masm/
+DOSXNT.386
+DOSXNT.EXE
+LINK.EXE
+ML.EXE
+
 # Ignore all files in folder below
 ignore/
 
