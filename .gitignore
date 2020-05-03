@@ -2,6 +2,8 @@
 nasm/
 # VAL linker path
 val/
+# Ignore all files in folder below
+ignore/
 
 # Created by https://www.gitignore.io/api/vim,linux,assembler,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=vim,linux,assembler,visualstudiocode
