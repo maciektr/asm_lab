@@ -21,6 +21,7 @@ txtconst1 segment
     readfout_tc db 10,13,"Wczytano plik wyjsciowy: ",10,13,"$" 
     readpass_tc db 10,13,"Wczytano haslo: ",10,13,"$"
     beggining_tc db 10,13,"Rozpoczynam kodowanie pliku: ",10,13,"$"
+    badarg_tc db 10,13,"Program zostal uruchomiony z niepoprawnymi argumentami. ",10,13,"$"
 txtconst1 ends
 
 
@@ -60,6 +61,9 @@ a1_start:
     
     cmp al, " "
     je a1_end
+    ; If not enough args
+    cmp al,0
+    je badargs
 	
     mov	byte ptr es:[si],al
 	inc	bp  ; bp++
@@ -77,6 +81,9 @@ a2_start:
 
     cmp al, " "
     je a2_end
+    ; If not enough args
+    cmp al,0
+    je badargs
 
 	mov	byte ptr es:[si],al
 	inc	bp  ; bp++
@@ -161,8 +168,9 @@ show_read:
 	mov	ah,3Dh
 	int	21h  ; pointer to file in AX 
 	mov	word ptr ds:[fin_ptr],ax
-	; TODO: Handle file open errors
- 
+	; Handle file open errors
+    jc badargs
+    
 	; File read 
 	mov	dx,offset fin_buffer
 	mov	ax,seg fin_buffer
@@ -171,13 +179,15 @@ show_read:
 	mov	cx,offset BUF_SIZE_C ; number of characters to read
 	mov	ah,03Fh
 	int	21h
-	; TODO: Handle file open errors
+	; Handle file open errors
+    jc badargs
  
 	; Close file - fin  
 	mov	bx,word ptr ds:[fin_ptr]
 	mov	ah,03eh
 	int	21h
-	; TODO: Handle file open errors
+	; Handle file open errors
+    jc badargs
 
 	mov	dx,offset fin_buffer
 	mov	ax, seg fin_buffer
@@ -190,9 +200,18 @@ show_read:
 ; ####################
 ; --------------------
 ;   Exit  
+exit:
 	mov	ah,4ch  
 	int	021h
  
+badargs:
+    mov dx,offset badarg_tc
+    mov ax, seg badarg_tc
+    mov ds,ax
+    mov ah,9
+    int 21h
+    jmp exit
+
 code1 ends
 
 stack1 segment stack
