@@ -1,21 +1,22 @@
-data1 segment
- 
-; txt1	    db 200 dup('$')
-file_in 	db 255 dup('$')
-file_out	db 255 dup('$')
-passphrase  db 255 dup('$')
+; Compiled and linked using MASM under DOSBOX emulator (Windows host)
 
-	db ?
-address1	dw 1345
- 
+data1 segment
+    file_in 	db 255 dup('$')
+    file_out	db 255 dup('$')
+    passphrase  db 255 dup('$')
+
+        db ?
+    address1	dw 1345
 data1 ends
 
-const1 segment
-
-const1 ends
+txtconst1 segment
+; _tc from text constant
+    readfin_tc  db 10,13,"Wczytano plik wejsciowy: ",10,13,"$" 
+    readfout_tc db 10,13,"Wczytano plik wyjsciowy: ",10,13,"$" 
+    readpass_tc db 10,13,"Wczytano haslo: ",10,13,"$"
+txtconst1 ends
 
 code1 segment
- 
 start1:
 	;ds -> wskazuje na segment programu
 	;offset: 080h = liczbe znakow buforu
@@ -90,34 +91,56 @@ a3_start:
     pop cx
     ; ret
 ; --------------------
-
- 
- 
- 
-	mov	ax,seg passphrase
+; Shows read arguments 
+show_read:
+	mov	ax,seg readfin_tc
 	mov	ds,ax
+    mov dx,offset readfin_tc
+    mov ah,9; print text from DS:DX
+    int 21h
 
-	; mov	dx,offset file_out
-	; mov	ah,9  ; print text from DS:DX
-	; int	21h
-    ; mov	dx,offset file_out
-	; mov	ah,9  ; print text from DS:DX
-	; int	21h
-    mov	dx,offset passphrase
-	mov	ah,9  ; print text from DS:DX
+    mov	ax,seg file_in
+	mov	ds,ax
+	mov	dx,offset file_in
+	mov	ah,9  
 	int	21h
- 
+
+    mov	ax,seg readfout_tc
+	mov	ds,ax
+    mov dx,offset readfout_tc
+    mov ah,9
+    int 21h
+
+    mov	ax,seg file_out
+	mov	ds,ax
+	mov	dx,offset file_out
+	mov	ah,9  
+	int	21h
+
+    mov	ax,seg readpass_tc
+	mov	ds,ax
+    mov dx,offset readpass_tc
+    mov ah,9
+    int 21h
+
+    mov	ax,seg passphrase
+	mov	ds,ax
+	mov	dx,offset passphrase
+	mov	ah,9  
+	int	21h
+; --------------------
+
+
+; --------------------
+;   Exit  
 	mov	ah,4ch  ; zakoncz program i wroc do systemu
 	int	021h
  
 code1 ends
- 
- 
- 
+
 stack1 segment stack
 	dw 200 dup(?)
 stackptr	dw ?
 stack1 ends
- 
  
 end start1
