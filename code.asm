@@ -47,10 +47,8 @@ start1:
 	mov	es,ax
 	mov	si,offset file_in ;   es:[si]
  
-	; mov	bp,0
-    xor bp,bp
-	mov	cx,bx
-
+    xor bp,bp ; bp=0
+	; mov	cx,bx
 a1_start:	
 	mov	al, byte ptr ds:[082h+ bp]
 	mov	byte ptr es:[si],al
@@ -85,7 +83,16 @@ a3_start:
 	mov	byte ptr es:[si],al
 	inc	bp  ; bp++
 	inc	si  ; si++
-    
+
+    cmp al,0
+    je a3_end
+    cmp al,10
+    je a3_end
+    cmp al,13
+    je a3_end
+    cmp al,3
+    je a3_end
+
 	loop	a3_start
  a3_end:
     pop cx
