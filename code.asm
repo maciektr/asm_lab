@@ -6,13 +6,15 @@ BUF_SIZE_C equ 255
 data1 segment
     file_in 	db 255 dup('$')
     file_out	db 255 dup('$')
-    passphrase  db 255 dup('$')
+    passphrase  db BUF_SIZE_C+1 dup('$')
 
     fin_ptr	    dw	?
     fin_buffer	db	BUF_SIZE_C+1 dup('$')
 
+    fout_ptr    dw  ?
+
         db ?
-    address1	dw 1345
+    ; address1	dw 1345
 data1 ends
 
 txtconst1 segment
@@ -113,6 +115,7 @@ a3_start:
 
 	loop	a3_start
  a3_end:
+    
     pop cx
     ; ret
 ; --------------------
@@ -170,6 +173,17 @@ show_read:
 	mov	word ptr ds:[fin_ptr],ax
 	; Handle file open errors
     jc badargs
+
+    ;Open file - fout
+    mov dx,offset file_out
+    mov	ax,seg file_out
+	mov	ds,ax   ; ds:dx -> file name
+	mov	al,0001h ; open in writeonly mode
+	mov	ah,3Dh
+	int	21h  ; pointer to file in AX 
+	mov	word ptr ds:[fout_ptr],ax
+	; Handle file open errors
+    jc badargs
     
 	; File read 
 	mov	dx,offset fin_buffer
@@ -179,6 +193,32 @@ show_read:
 	mov	cx,offset BUF_SIZE_C ; number of characters to read
 	mov	ah,03Fh
 	int	21h
+	; Handle file read errors
+    jc badargs
+    ; AX - number of bytes read
+    ; --------------------
+; ####################
+
+    ; Code text in buffer by xor with passphrase
+;     mov dx, ax ; number of bytes read
+;     xor si,si
+; code_lbeg:
+
+
+;     inc si
+;     cmp dx,si
+;     jl code_lbeg
+; code_lend:
+
+    ; --------------------
+    ; File write
+	mov	cx,ax ; number of characters to write
+    mov	dx,offset fin_buffer
+	mov	ax,seg fin_buffer
+	mov	ds,ax   ;ds:dx -> write buffer 
+    mov	bx,word ptr ds:[fout_ptr]
+	mov	ah,40h
+	int	21h
 	; Handle file open errors
     jc badargs
  
@@ -186,7 +226,14 @@ show_read:
 	mov	bx,word ptr ds:[fin_ptr]
 	mov	ah,03eh
 	int	21h
-	; Handle file open errors
+	; Handle file close errors
+    jc badargs
+
+    ; Close file - fout
+	mov	bx,word ptr ds:[fout_ptr]
+	mov	ah,03eh
+	int	21h
+	; Handle file close errors
     jc badargs
 
 	mov	dx,offset fin_buffer
@@ -194,10 +241,6 @@ show_read:
 	mov	ds,ax
 	mov	ah,9  ; wypisz tekst z DS:DX
 	int	21h
-; --------------------
-; ####################
-
-; ####################
 ; --------------------
 ;   Exit  
 exit:
