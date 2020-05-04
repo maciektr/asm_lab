@@ -211,18 +211,22 @@ show_read:
     jc badargs
     ; AX - number of bytes read
     ; --------------------
-; ####################
-
+    ; ####################
     ; Code text in buffer by xor with passphrase
-;     mov dx, ax ; number of bytes read
-;     xor si,si
-; code_lbeg:
+    mov di,offset fin_buffer
+    mov si,offset passphrase
+code_lbeg:
+    mov al, byte ptr ds:[si]
+    
+    cmp al, "$"
+    je code_lend
 
+    xor byte ptr ds:[di], al
 
-;     inc si
-;     cmp dx,si
-;     jl code_lbeg
-; code_lend:
+    inc si
+    inc di
+    jmp code_lbeg
+code_lend:
 
     ; --------------------
     ; File write
@@ -234,6 +238,7 @@ show_read:
 	mov	ah,40h
 	int	21h
 	; Handle file open errors
+    ; Jump if Carry flag set
     jc badargs
  
 	; Close file - fin  
@@ -241,6 +246,7 @@ show_read:
 	mov	ah,03eh
 	int	21h
 	; Handle file close errors
+    ; Jump if Carry flag set
     jc badargs
 
     ; Close file - fout
@@ -248,6 +254,7 @@ show_read:
 	mov	ah,03eh
 	int	21h
 	; Handle file close errors
+    ; Jump if Carry flag set
     jc badargs
 
 	mov	dx,offset fin_buffer
