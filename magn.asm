@@ -3,7 +3,7 @@
 ; maginifier.exe [zoom (digit)] [text]
 
 ; Constants
-TEXT_SIZE_C 	equ 511
+; TEXT_SIZE_C 	equ 511
 SCREEN_WIDTH 	equ 320
 SCREEN_HEIGHT	equ 200
 CHAR_LEN		equ 8
@@ -14,7 +14,7 @@ PADDING 		equ 1
 
 data1 segment
     zoom 	db 1 dup('$')
-    text	db	TEXT_SIZE_C+3 dup('$')
+    ; text	db	TEXT_SIZE_C+3 dup('$')
         db ?
 data1 ends
 
@@ -219,13 +219,13 @@ a1_end:
 
 	inc bp 
 	; Start parsing second argument
-	mov ax, seg text 
-	mov es, ax
-	mov si, offset text ; es:[si]
+	; mov ax, seg text 
+	; mov es, ax
+	; mov si, offset text ; es:[si]
 
 ; Read second argument
 	; Store current char count in di
-	xor di,di
+	; xor di,di
 a2_start:
 	; Read character
 	mov	al, byte ptr ds:[082h+ bp]
@@ -233,8 +233,8 @@ a2_start:
 	; Exit at the end of arguments line
     cmp al, " "
     je a2_end
-    cmp al,0
-    je a2_end
+    ; cmp al,0
+    ; je a2_end
     cmp al,10
     je a2_end
     cmp al,13
@@ -249,13 +249,15 @@ a2_start:
     ; mov	byte ptr es:[si],al
 	; Print read char 
 	push bx
+	; push bp
 	mov bl, al 
 	call print_char
+	; pop bp 
 	pop bx
 
 	inc	bp 
 	inc	si 
-	inc di
+	; inc di
 
 	loop	a2_start
 a2_end:
@@ -311,10 +313,11 @@ set_pixel_on:
 	push bx 
 	push cx 
 	push dx 
+	push ds
 
 	; Graphic memory segment address
 	mov	ax,0a000h  
-	mov	es,ax
+	mov	ds,ax
 	mov	ax,word ptr cs:[y]
 	; Number of points in graphic line
 	mov	bx,SCREEN_WIDTH  
@@ -323,8 +326,9 @@ set_pixel_on:
 	mov	bx,ax
 	mov	al,byte ptr cs:[color]
 	; es:[320 * y + x] = color
-	mov	byte ptr es:[bx],al 
+	mov	byte ptr ds:[bx],al 
 
+	pop ds
 	pop dx 
 	pop cx 
 	pop bx
@@ -341,7 +345,7 @@ print_char:
 	xor bh,bh
 
 	mov ax, seg ascii
-	mov ds, ax
+	mov es, ax
 	mov ax, CHAR_LEN
 	mul bx
 	add ax, offset ascii
@@ -357,7 +361,7 @@ print_bitmap_row:
 check_bits:	
 	push cx
 	mov ax, dx
-	and ax,ds:[bx]
+	and ax,es:[bx]
 
 	cmp ax, 0
 	je no_set
@@ -375,7 +379,7 @@ check_bits_end:
 	inc bx
 	pop cx
 	loop print_bitmap_row
-	add word ptr cs:[x],14 ;TODO: 7? 14? 16? 
+	add word ptr cs:[x],7 
 	add word ptr cs:[x], PADDING
 	mov word ptr cs:[y],START_Y
 
