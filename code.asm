@@ -9,7 +9,7 @@ data1 segment
     passphrase  db BUF_SIZE_C+1 dup('$')
 
     fin_ptr	    dw	?
-    fin_buffer	db	BUF_SIZE_C+3 dup('$')
+    fin_buffer	db	BUF_SIZE_C+4 dup('$')
 
     fout_ptr    dw  ?
 
@@ -196,37 +196,41 @@ read_code_buffer:
     jc fread_err
 
     ; AX - number of bytes read
+    ; If 0 end encoding phase
     cmp ax, 0
     je read_code_end
 
+    ; Show read buffer content
     mov bp, ax
     mov di,offset fin_buffer 
     mov	byte ptr ds:[di + bp],10
     mov	byte ptr ds:[di + bp+1],13
     mov	byte ptr ds:[di + bp+2],"$"
-
     call show_buffer
 
+    ; Store number of characters to write in CX
+    mov cx, ax 
 
-    ; ####################
     ; Code text in buffer by xor with passphrase
     mov di,offset fin_buffer
     mov si,offset passphrase
 code_lbeg:
+    ; Store current char of passphrase in al
     mov al, byte ptr ds:[si]
     
+    ; If end of passphrase, jump to end
     cmp al, "$"
     je code_lend
 
+    ; The said encoding by xor with pass char
     xor byte ptr ds:[di], al
 
     inc si
     inc di
     jmp code_lbeg
 code_lend:
-
     ; File write
-	mov	cx,ax ; number of characters to write
+	; mov	cx,ax ; already did in line 210, now ax is destroyed
     mov	dx,offset fin_buffer
 	mov	ax,seg fin_buffer
 	mov	ds,ax   ;ds:dx -> write buffer 
