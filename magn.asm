@@ -40,6 +40,7 @@ parse_args:
 	mov es, ax
 	mov si, offset zoom ; es:[si]
 
+; Read first argument 
 	xor bp,bp
 a1_start: 
 	; Read char to al
@@ -75,11 +76,15 @@ a1_end:
 	mov ax, seg text 
 	mov es, ax
 	mov si, offset text ; es:[si]
-	; Store current char count in cx
-	xor cx,cx
+
+; Read second argument
+	; Store current char count in di
+	xor di,di
 a2_start:
+	; Read character
 	mov	al, byte ptr ds:[082h+ bp]
     
+	; Exit at the end of arguments line
     cmp al, " "
     je a2_end
     cmp al,0
@@ -90,24 +95,26 @@ a2_start:
     je a2_end
     cmp al,3
     je a2_end
-    cmp cx,TEXT_SIZE_C
+	; Ensure no bufferoverflow in text var
+    cmp di,TEXT_SIZE_C
     jge a2_end
 	
+	; Copy char read to var
     mov	byte ptr es:[si],al
 	inc	bp 
 	inc	si 
-	inc cx
+	inc di
 
 	loop	a2_start
 a2_end:
 	; Terminate read string
     mov	byte ptr es:[si],"$"
-
-
+; --------------------
+	
 
 
 ; --------------------
-	; Set starting point
+	; Set starting point for drawing
 	mov	word ptr cs:[x],10
 	mov	word ptr cs:[y],100
 	; Set color
