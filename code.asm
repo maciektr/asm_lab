@@ -1,7 +1,7 @@
 ; Compiled and linked using MASM under DOSBOX emulator (Windows host)
 
 ; Constants
-BUF_SIZE_C equ 255
+BUF_SIZE_C equ 10
 
 data1 segment
     file_in 	db 255 dup('$')
@@ -9,7 +9,7 @@ data1 segment
     passphrase  db BUF_SIZE_C+1 dup('$')
 
     fin_ptr	    dw	?
-    fin_buffer	db	BUF_SIZE_C+1 dup('$')
+    fin_buffer	db	BUF_SIZE_C+3 dup('$')
 
     fout_ptr    dw  ?
 
@@ -154,8 +154,7 @@ a3_no_print:
     pop cx
     ; ret
 ; --------------------
-; Shows read arguments 
-show_read:
+; Print that program starts encoding 
     mov ax,seg beggining_tc
     mov ds,ax
     mov dx,offset beggining_tc
@@ -197,6 +196,18 @@ read_code_buffer:
     jc fread_err
 
     ; AX - number of bytes read
+    cmp ax, 0
+    je read_code_end
+
+    mov bp, ax
+    mov di,offset fin_buffer 
+    mov	byte ptr ds:[di + bp],10
+    mov	byte ptr ds:[di + bp+1],13
+    mov	byte ptr ds:[di + bp+2],"$"
+
+    call show_buffer
+
+
     ; ####################
     ; Code text in buffer by xor with passphrase
     mov di,offset fin_buffer
@@ -225,7 +236,9 @@ code_lend:
 	; Handle file open errors
     ; Jump if Carry flag set
     jc fwrite_err
-    
+
+    jmp read_code_buffer
+read_code_end:
 ; --------------------
 	; Close file - fin  
 	mov	bx,word ptr ds:[fin_ptr]
@@ -242,21 +255,31 @@ code_lend:
 	; Handle file close errors
     ; Jump if Carry flag set
     jc badargs
+; --------------------
+;   Exit  
+exit:
+	mov	ah,4ch  
+	int	021h
+
+;   Print content of fin_buffer
+show_buffer:
+    push ax
+    push dx
+    push ds 
 
 	mov	dx,offset fin_buffer
 	mov	ax, seg fin_buffer
 	mov	ds,ax
 	mov	ah,9  ; wypisz tekst z DS:DX
 	int	21h
-; --------------------
-;   Exit  
-exit:
-	mov	ah,4ch  
-	int	021h
- 
+
+    pop ds
+    pop dx 
+    pop ax 
+    ret
+     
 ;   Print content of file_in with additional msg from readfin_tc
 show_read_fin:
-
     push ax
     push dx
     push ds 
