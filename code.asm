@@ -73,6 +73,8 @@ a1_start:
 
 	loop	a1_start
 a1_end:
+    call show_read_fin
+
     mov	byte ptr es:[si],0
 	mov	ax,seg file_out
 	mov	es,ax
@@ -93,6 +95,8 @@ a2_start:
 
 	loop	a2_start
  a2_end:
+    call show_read_fout
+
     mov	byte ptr es:[si],0
 	mov	ax,seg passphrase
 	mov	es,ax
@@ -102,6 +106,12 @@ a2_start:
     mov bx, bp
     ; Store number of currently read chars in cx
     xor cx,cx
+    ; Check if already printed pass 
+    xor ah,ah 
+    ; The code below reads pass multiple times, to match buffer size
+    mov	al, byte ptr ds:[082h + bp]
+	; inc	bp  
+    inc cx
 a3_start:	
 	mov	al, byte ptr ds:[082h + bp]
 	inc	bp  
@@ -124,6 +134,15 @@ a3_start:
 
 	jmp	a3_start
  a3_end:
+    ; Although pass is being read multiple times to match buffer size 
+    ; It should be printed only once in order not to confuse user
+    cmp ah,1
+    jge a3_no_print
+
+    mov	byte ptr es:[si],"$"
+    call show_read_pass
+    inc ah
+a3_no_print:
     ; If read less than BUF_SIZE_C chars, repeat reading
     mov bp,bx
     cmp cx,BUF_SIZE_C
@@ -135,42 +154,6 @@ a3_start:
 ; --------------------
 ; Shows read arguments 
 show_read:
-	mov	ax,seg readfin_tc
-	mov	ds,ax
-    mov dx,offset readfin_tc
-    mov ah,9; print text from DS:DX
-    int 21h
-
-    mov	ax,seg file_in
-	mov	ds,ax
-	mov	dx,offset file_in
-	mov	ah,9  
-	int	21h
-
-    mov	ax,seg readfout_tc
-	mov	ds,ax
-    mov dx,offset readfout_tc
-    mov ah,9
-    int 21h
-
-    mov	ax,seg file_out
-	mov	ds,ax
-	mov	dx,offset file_out
-	mov	ah,9  
-	int	21h
-
-    mov	ax,seg readpass_tc
-	mov	ds,ax
-    mov dx,offset readpass_tc
-    mov ah,9
-    int 21h
-
-    mov	ax,seg passphrase
-	mov	ds,ax
-	mov	dx,offset passphrase
-	mov	ah,9  
-	int	21h
-
     mov ax,seg beggining_tc
     mov ds,ax
     mov dx,offset beggining_tc
@@ -198,7 +181,8 @@ show_read:
 	mov	word ptr ds:[fout_ptr],ax
 	; Handle file open errors
     jc badargs
-    
+; --------------------
+
 	; File read 
 	mov	dx,offset fin_buffer
 	mov	ax,seg fin_buffer
@@ -210,7 +194,6 @@ show_read:
 	; Handle file read errors
     jc badargs
     ; AX - number of bytes read
-    ; --------------------
     ; ####################
     ; Code text in buffer by xor with passphrase
     mov di,offset fin_buffer
@@ -228,7 +211,7 @@ code_lbeg:
     jmp code_lbeg
 code_lend:
 
-    ; --------------------
+; --------------------
     ; File write
 	mov	cx,ax ; number of characters to write
     mov	dx,offset fin_buffer
@@ -268,6 +251,76 @@ exit:
 	mov	ah,4ch  
 	int	021h
  
+;   Print content of file_in with additional msg from readfin_tc
+show_read_fin:
+
+    push ax
+    push dx
+    push ds 
+
+	mov	ax,seg readfin_tc
+	mov	ds,ax
+    mov dx,offset readfin_tc
+    mov ah,9; print text from DS:DX
+    int 21h
+
+    mov	ax,seg file_in
+	mov	ds,ax
+	mov	dx,offset file_in
+	mov	ah,9  
+	int	21h
+
+    pop ds
+    pop dx 
+    pop ax 
+    ret
+
+;   Print content of file_out with additional msg from readfout_tc
+show_read_fout:
+    push ax
+    push dx
+    push ds 
+
+    mov	ax,seg readfout_tc
+	mov	ds,ax
+    mov dx,offset readfout_tc
+    mov ah,9
+    int 21h
+
+    mov	ax,seg file_out
+	mov	ds,ax
+	mov	dx,offset file_out
+	mov	ah,9  
+	int	21h
+
+    pop ds
+    pop dx 
+    pop ax 
+    ret
+
+;   Print content of passphrase with additional msg from readpass_tc
+show_read_pass:
+    push ax
+    push dx
+    push ds 
+
+    mov	ax,seg readpass_tc
+	mov	ds,ax
+    mov dx,offset readpass_tc
+    mov ah,9
+    int 21h
+
+    mov	ax,seg passphrase
+	mov	ds,ax
+	mov	dx,offset passphrase
+	mov	ah,9  
+	int	21h
+
+    pop ds
+    pop dx 
+    pop ax 
+    ret 
+
 badargs:
     mov dx,offset badarg_tc
     mov ax, seg badarg_tc
