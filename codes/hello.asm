@@ -20,5 +20,12 @@ segment .text
     mov ah, 09h
     int 21h
 
-    mov ah,4ch
+    mov bl,[80h]
+    mov byte [bx+81h],'$'
+    mov dx, 082h
+    mov ah, 09h 
+    int 21h
+    
+exit:
+    mov ah, 4ch
     int 21h

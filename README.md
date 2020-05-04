@@ -6,4 +6,5 @@ This repository contains simple programs implemented as part of "Programming in 
 ## Table of Contents
 | Code (link) | Task | Description |
 |:-------------:|:-------------:|:-----:|
-| [Hello world](https://github.com/maciektr/asm_lab/tree/master/codes/hello.asm) | Hello world | My first assembler program.
+| [Hello world](https://github.com/maciektr/asm_lab/tree/master/codes/hello.asm) | Hello world | My first assembler program. Prints "hello world" and arguments from command line.
+| [Xor encoding](https://github.com/maciektr/asm_lab/blob/master/code.asm) | Program encoding file given by filename by xor with passphrase from argument, writing result to output file given by filename. 
