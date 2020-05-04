@@ -10,7 +10,7 @@ CHAR_LEN		equ 8
 TEXT_COLOR 		equ 15 
 START_X			equ 0
 START_Y			equ 0
-PADDING 		equ 1
+PADDING 		equ 0
 
 data1 segment
     zoom 	db 1 dup('$')
@@ -202,12 +202,12 @@ a1_start:
 	sub al, "0"
 	; Ensure al stores digit
 	cmp al,0
-	jl badargs
+	jle badargs
 	cmp al,9
 	jg badargs
 
 	; Save in zoom var
-	inc al
+	; inc al
     mov	byte ptr es:[si],al
 	inc	bp  ; bp++
 a1_end:
@@ -293,6 +293,11 @@ set_realpixel:
 	push dx 
 	push ds
 
+	cmp word ptr cs:[rel_x], SCREEN_WIDTH
+	jge set_relpix_end
+	cmp word ptr cs:[rel_y], SCREEN_HEIGHT
+	jge set_relpix_end
+
 	; Graphic memory segment address
 	mov	ax,0a000h  
 	mov	ds,ax
@@ -306,6 +311,7 @@ set_realpixel:
 	; es:[320 * y + x] = color
 	mov	byte ptr ds:[bx],al 
 
+set_relpix_end:
 	pop ds
 	pop dx 
 	pop cx 
