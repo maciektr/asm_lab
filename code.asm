@@ -1,7 +1,7 @@
 ; Compiled and linked using MASM under DOSBOX emulator (Windows host)
 
 ; Constants
-BUF_SIZE_C equ 10
+BUF_SIZE_C equ 253
 
 data1 segment
     file_in 	db 255 dup('$')
@@ -9,7 +9,7 @@ data1 segment
     passphrase  db BUF_SIZE_C+1 dup('$')
 
     fin_ptr	    dw	?
-    fin_buffer	db	BUF_SIZE_C+4 dup('$')
+    fin_buffer	db	BUF_SIZE_C+3 dup('$')
 
     fout_ptr    dw  ?
 
