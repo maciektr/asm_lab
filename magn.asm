@@ -10,6 +10,7 @@ CHAR_LEN		equ 8
 TEXT_COLOR 		equ 15 
 START_X			equ 0
 START_Y			equ 0
+PADDING 		equ 1
 
 data1 segment
     zoom 	db 1 dup('$')
@@ -248,10 +249,26 @@ a2_end:
 	; Terminate read string
     mov	byte ptr es:[si],"$"
 ; --------------------
-	; mov ax, CHAR_LEN
-	; mov bx, "a"
-	; mul bx
-	; add ax, offset ascii
+; ####################
+	; Set starting point for drawing
+	mov	word ptr cs:[x],START_X
+	mov	word ptr cs:[y],START_Y
+	; Set color
+	mov	byte ptr cs:[color],TEXT_COLOR
+ 
+	; Set cx pixels on 
+; 	mov	cx,200
+; p1:	push	cx
+; 	call	set_pixel_on
+; 	inc	word ptr cs:[x]
+; 	pop	cx
+; 	loop	p1
+
+; --------------------
+; 	Set pointer to char 
+	mov bx, "c"
+	call print_char
+
 	; mov dx,offset ascii
 	; mov ax, seg rend_char
 
@@ -261,21 +278,8 @@ a2_end:
 	; jmp exit
 
 
-; --------------------
-	; Set starting point for drawing
-	mov	word ptr cs:[x],START_X
-	mov	word ptr cs:[y],START_Y
-	; Set color
-	mov	byte ptr cs:[color],TEXT_COLOR
- 
-	; Set cx pixels on 
-	mov	cx,200
-p1:	push	cx
-	call	set_pixel_on
-	inc	word ptr cs:[x]
-	pop	cx
-	loop	p1
 
+; ####################
 ; --------------------
 exit:
 	; Wait for any key
@@ -292,12 +296,19 @@ exit_now:
 	mov	ah,4ch  
 	int	021h
 ; --------------------
-; Local variables in CS for set_pixel_on procedure
+; Local variables in CS for graphics 
+color	db	0
+
+; Used in set_pixel_on procedure
 x		dw	0
 y		dw	0
-color	db	0
  
 set_pixel_on:
+	push ax 
+	push bx 
+	push cx 
+	push dx 
+
 	; Graphic memory segment address
 	mov	ax,0a000h  
 	mov	es,ax
@@ -310,6 +321,62 @@ set_pixel_on:
 	mov	al,byte ptr cs:[color]
 	; es:[320 * y + x] = color
 	mov	byte ptr es:[bx],al 
+
+	pop dx 
+	pop cx 
+	pop bx
+	pop ax 
+	ret
+; --------------------
+; Prints char from bx
+print_char:
+	push ax 
+	push cx 
+	push dx 
+
+	mov ax, seg ascii
+	mov ds, ax
+	mov ax, CHAR_LEN
+	mul bx
+	add ax, offset ascii
+	mov bx, ax
+	; bx = CHAR_LEN * "d" + offset ascii
+
+; Print one row of rendered char
+mov cx, 7
+print_bitmap_row:
+	push cx
+	mov cx, 7 
+	mov dx, 1h;80h
+check_bits:	
+	push cx
+	mov ax, dx
+	and ax,ds:[bx]
+
+	cmp ax, 0
+	je no_set
+	call  set_pixel_on
+no_set: 
+
+	inc word ptr cs:[x]
+	shl dx,1
+	
+	pop cx
+	loop check_bits
+check_bits_end:
+	inc word ptr cs:[y]
+	sub word ptr cs:[x],7
+	inc bx
+	pop cx
+	loop print_bitmap_row
+	add word ptr cs:[x],7
+	add word ptr cs:[x], PADDING
+	mov word ptr cs:[y],START_Y
+
+	pop dx 
+	pop cx 
+	pop ax 
+
 	ret
 ; --------------------
  badargs:
