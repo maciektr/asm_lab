@@ -6,8 +6,11 @@
 ; TEXT_SIZE_C 	equ 511
 SCREEN_WIDTH 	equ 320
 SCREEN_HEIGHT	equ 200
+SCREEN_HDIVTWO 	equ 100
 CHAR_LEN		equ 8
+CHAR_LDIVTWO	equ 4
 TEXT_COLOR 		equ 15 
+
 START_X			equ 0
 START_Y			equ 0
 PADDING 		equ 0
@@ -171,11 +174,11 @@ start1:
 	int	10h
 
 ; --------------------
-; Set starting point for drawing
-	mov	word ptr cs:[x],START_X
-	mov	word ptr cs:[y],START_Y
 ; Set color
 	mov	byte ptr cs:[color],TEXT_COLOR
+; Set starting point for drawing
+	mov	word ptr cs:[y],0 
+	mov	word ptr cs:[x],START_X
 
 ; --------------------
 ; Reads argument line
@@ -211,6 +214,33 @@ a1_start:
     mov	byte ptr es:[si],al
 	inc	bp  ; bp++
 a1_end:
+	; Move starting point to center vertically 
+	mov	word ptr cs:[s_y], START_Y
+	; add word ptr cs:[s_y], 21
+	mov bl, al 
+	xor bh,bh 
+	; bx = al = zoom 
+	mov ax, CHAR_LDIVTWO 
+	; ax = CHAR_LEN / 2 = (default 4)
+	mul bx 
+	; ax = zoom * 4 
+
+	mov bx, SCREEN_HDIVTWO
+	; bx = SCREEN_HEIGHT / 2 = (default 100)
+
+	sub bx, ax 
+	; bx = (SCREEN_HEIGHT / 2) - (CHAR_LEN / 2)*zoom = 100 - 4*zoom 
+
+	; ax = ax / bx = SCREEN_HEIGHT / zoom 
+	; sub ax, CHAR_LEN 
+	; ; ax = ax - CHAR_LEN (CHAR_LEN = char height)
+
+	; mov bx, 2
+	; div bx 
+	; ; ax = ax / bx = ax / 2  
+	add word ptr cs:[s_y], bx 
+	; y += bx 
+
 	; Read next char
 	mov	al, byte ptr ds:[082h+ bp]
 
@@ -244,28 +274,6 @@ a2_start:
 	loop	a2_start
 a2_end:
 
-; --------------------
-	; mov bx, "c"
-	; call print_char
-; ####################
-	; Set cx pixels on 
-; 	mov	cx,200
-; p1:	push	cx
-; 	call	set_pixel_on
-; 	inc	word ptr cs:[x]
-; 	pop	cx
-; 	loop	p1
-
-; --------------------
-; 	Set pointer to char 
-	; mov dx,offset ascii
-	; mov ax, seg rend_char
-
-    ; mov ds,ax
-    ; mov ah,9
-    ; int 21h
-	; jmp exit
-; ####################
 ; --------------------
 
 exit:
@@ -325,6 +333,8 @@ color	db	0
 ; Used in set_pixel_on procedure
 x		dw	0
 y		dw	0
+s_y 	dw  0
+
 ; Sets "zoomed" pixel on, meaning a square of pixels, having zoom of pixels in both sides.
 set_pixel_on:
 	push ax 
@@ -360,6 +370,8 @@ set_pixel_on:
 	mul bx 
 	mov word ptr cs:[rel_y], ax
 	; rel_y = bx * al  = y * zoom 
+	mov ax, word ptr cs:[s_y]
+	add word ptr cs:[rel_y], ax 
 
 	mov cl, byte ptr ds:[si]
 	xor ch,ch 
@@ -441,7 +453,9 @@ check_bits_end:
 	loop print_bitmap_row
 	add word ptr cs:[x],7 
 	add word ptr cs:[x], PADDING
-	mov word ptr cs:[y],START_Y
+	; mov ax, word ptr cs:[s_y]
+	mov word ptr cs:[y],0 
+	; mov word ptr cs:[y],START_Y
 
 	pop dx 
 	pop cx 
