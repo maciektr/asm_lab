@@ -171,6 +171,13 @@ start1:
 	int	10h
 
 ; --------------------
+; Set starting point for drawing
+	mov	word ptr cs:[x],START_X
+	mov	word ptr cs:[y],START_Y
+; Set color
+	mov	byte ptr cs:[color],TEXT_COLOR
+
+; --------------------
 ; Reads argument line
 ; zoom <- first argument (as number, one digit)
 ; text <- second argument
@@ -235,11 +242,17 @@ a2_start:
     cmp al,3
     je a2_end
 	; Ensure no bufferoverflow in text var
-    cmp di,TEXT_SIZE_C
-    jge a2_end
+    ; cmp di,TEXT_SIZE_C
+    ; jge a2_end
 	
 	; Copy char read to var
-    mov	byte ptr es:[si],al
+    ; mov	byte ptr es:[si],al
+	; Print read char 
+	push bx
+	mov bl, al 
+	call print_char
+	pop bx
+
 	inc	bp 
 	inc	si 
 	inc di
@@ -249,13 +262,9 @@ a2_end:
 	; Terminate read string
     mov	byte ptr es:[si],"$"
 ; --------------------
+	; mov bx, "c"
+	; call print_char
 ; ####################
-	; Set starting point for drawing
-	mov	word ptr cs:[x],START_X
-	mov	word ptr cs:[y],START_Y
-	; Set color
-	mov	byte ptr cs:[color],TEXT_COLOR
- 
 	; Set cx pixels on 
 ; 	mov	cx,200
 ; p1:	push	cx
@@ -266,9 +275,6 @@ a2_end:
 
 ; --------------------
 ; 	Set pointer to char 
-	mov bx, "c"
-	call print_char
-
 	; mov dx,offset ascii
 	; mov ax, seg rend_char
 
@@ -276,9 +282,6 @@ a2_end:
     ; mov ah,9
     ; int 21h
 	; jmp exit
-
-
-
 ; ####################
 ; --------------------
 exit:
@@ -328,11 +331,14 @@ set_pixel_on:
 	pop ax 
 	ret
 ; --------------------
-; Prints char from bx
+; Prints char from bl
+; (destroys bx)
 print_char:
 	push ax 
 	push cx 
 	push dx 
+
+	xor bh,bh
 
 	mov ax, seg ascii
 	mov ds, ax
@@ -369,7 +375,7 @@ check_bits_end:
 	inc bx
 	pop cx
 	loop print_bitmap_row
-	add word ptr cs:[x],7
+	add word ptr cs:[x],14 ;TODO: 7? 14? 16? 
 	add word ptr cs:[x], PADDING
 	mov word ptr cs:[y],START_Y
 
