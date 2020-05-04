@@ -24,6 +24,8 @@ txtconst1 segment
     readpass_tc db 10,13,"Wczytano haslo: ",10,13,"$"
     beggining_tc db 10,13,"Rozpoczynam kodowanie pliku: ",10,13,"$"
     badarg_tc db 10,13,"Program zostal uruchomiony z niepoprawnymi argumentami. ",10,13,"$"
+    fwrite_err_tc db 10,13,"Wystapil blad podczas zapisu do pliku.",10,13,"$"
+    fread_err_tc db 10,13,"Wystapil blad podczas odczytu pliku.",10,13,"$"
 txtconst1 ends
 
 
@@ -182,7 +184,7 @@ show_read:
 	; Handle file open errors
     jc badargs
 ; --------------------
-
+read_code_buffer:
 	; File read 
 	mov	dx,offset fin_buffer
 	mov	ax,seg fin_buffer
@@ -192,7 +194,8 @@ show_read:
 	mov	ah,03Fh
 	int	21h
 	; Handle file read errors
-    jc badargs
+    jc fread_err
+
     ; AX - number of bytes read
     ; ####################
     ; Code text in buffer by xor with passphrase
@@ -211,7 +214,6 @@ code_lbeg:
     jmp code_lbeg
 code_lend:
 
-; --------------------
     ; File write
 	mov	cx,ax ; number of characters to write
     mov	dx,offset fin_buffer
@@ -222,8 +224,9 @@ code_lend:
 	int	21h
 	; Handle file open errors
     ; Jump if Carry flag set
-    jc badargs
- 
+    jc fwrite_err
+    
+; --------------------
 	; Close file - fin  
 	mov	bx,word ptr ds:[fin_ptr]
 	mov	ah,03eh
@@ -329,6 +332,22 @@ badargs:
     int 21h
     jmp exit
 
+fwrite_err:
+    mov dx,offset fwrite_err_tc
+    mov ax, seg fwrite_err_tc
+    mov ds,ax
+    mov ah,9
+    int 21h
+    jmp exit
+
+fread_err:
+    mov dx,offset fread_err_tc
+    mov ax, seg fread_err_tc
+    mov ds,ax
+    mov ah,9
+    int 21h
+    jmp exit
+    
 code1 ends
 
 stack1 segment stack
