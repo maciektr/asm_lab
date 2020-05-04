@@ -296,11 +296,11 @@ set_realpixel:
 	; Graphic memory segment address
 	mov	ax,0a000h  
 	mov	ds,ax
-	mov	ax,word ptr cs:[y]
+	mov	ax,word ptr cs:[rel_y]
 	; Number of points in graphic line
 	mov	bx,SCREEN_WIDTH  
 	mul	bx	; dx:ax = ax * bx
-	add	ax,word ptr cs:[x]   ;ax = 320*y +x
+	add	ax,word ptr cs:[rel_x]   ;ax = 320*y +x
 	mov	bx,ax
 	mov	al,byte ptr cs:[color]
 	; es:[320 * y + x] = color
@@ -327,11 +327,60 @@ set_pixel_on:
 	push dx 
 	push ds
 
-	mov ax, word ptr cs:[x]
+	mov ax, seg zoom 
+	mov ds, ax 
+	mov si, offset zoom 
+	mov al, byte ptr ds:[si]
+	xor ah, ah
+	; al = zoom; ah = 0 
+
+	mov bx, word ptr cs:[x]
+	; bx = x 
+	
+	mul bx 
 	mov word ptr cs:[rel_x], ax 
-	mov ax, word ptr cs:[y]
+	; rel_x = bx * al = x * zoom 
+
+	; mov ax, seg zoom 
+	; mov ds, ax 
+	; mov si, offset zoom 
+	mov al, byte ptr ds:[si]
+	xor ah, ah
+	; al = zoom; ah = 0 
+
+	mov bx, word ptr cs:[y]
+	; bx = y
+
+	mul bx 
 	mov word ptr cs:[rel_y], ax
-	call set_realpixel
+	; rel_y = bx * al  = y * zoom 
+
+	mov cl, byte ptr ds:[si]
+	xor ch,ch 
+	; cx = zoom 
+sq_l1_beg:
+	push cx 
+	
+	mov cl, byte ptr ds:[si]
+	xor ch,ch 
+	; cx = zoom 
+	sq_l2_beg:
+		push cx 
+
+		call set_realpixel
+		inc word ptr cs:[rel_x]
+
+		pop cx
+		loop sq_l2_beg
+	inc word ptr cs:[rel_y]
+	mov al, byte ptr ds:[si]
+	xor ah,ah
+	; dec ax 
+	sub word ptr cs:[rel_x], ax
+
+
+	pop cx 
+	loop sq_l1_beg
 	
 	pop ds
 	pop dx 
