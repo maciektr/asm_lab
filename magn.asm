@@ -207,6 +207,7 @@ a1_start:
 	jg badargs
 
 	; Save in zoom var
+	inc al
     mov	byte ptr es:[si],al
 	inc	bp  ; bp++
 a1_end:
@@ -282,14 +283,10 @@ exit_now:
 	mov	ah,4ch  
 	int	021h
 ; --------------------
-; Local variables in CS for graphics 
-color	db	0
-
-; Used in set_pixel_on procedure
-x		dw	0
-y		dw	0
- 
-set_pixel_on:
+; Sets pixel on. Contrary to set_pixel_on uses real pixel, not zoomed equivalent.
+rel_x 	dw 0
+rel_y 	dw 0
+set_realpixel:
 	push ax 
 	push bx 
 	push cx 
@@ -309,6 +306,33 @@ set_pixel_on:
 	; es:[320 * y + x] = color
 	mov	byte ptr ds:[bx],al 
 
+	pop ds
+	pop dx 
+	pop cx 
+	pop bx
+	pop ax 
+	ret
+; --------------------
+; Local variables in CS for graphics 
+color	db	0
+
+; Used in set_pixel_on procedure
+x		dw	0
+y		dw	0
+; Sets "zoomed" pixel on, meaning a square of pixels, having zoom of pixels in both sides.
+set_pixel_on:
+	push ax 
+	push bx 
+	push cx 
+	push dx 
+	push ds
+
+	mov ax, word ptr cs:[x]
+	mov word ptr cs:[rel_x], ax 
+	mov ax, word ptr cs:[y]
+	mov word ptr cs:[rel_y], ax
+	call set_realpixel
+	
 	pop ds
 	pop dx 
 	pop cx 
