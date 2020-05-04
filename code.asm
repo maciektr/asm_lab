@@ -1,4 +1,6 @@
 ; Compiled and linked using MASM under DOSBOX emulator (Windows host)
+; Example run: 
+; code.exe [input filename] [output filename] [passphrase]
 
 ; Constants
 BUF_SIZE_C equ 253
