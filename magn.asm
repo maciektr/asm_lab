@@ -198,7 +198,7 @@ a1_start:
     cmp al,0
     je badargs
 	
-	; Convrt to number
+	; Convert to number
 	sub al, "0"
 	; Ensure al stores digit
 	cmp al,0
@@ -218,51 +218,31 @@ a1_end:
     jne badargs
 
 	inc bp 
-	; Start parsing second argument
-	; mov ax, seg text 
-	; mov es, ax
-	; mov si, offset text ; es:[si]
-
 ; Read second argument
-	; Store current char count in di
-	; xor di,di
+; Print it 
 a2_start:
 	; Read character
 	mov	al, byte ptr ds:[082h+ bp]
     
 	; Exit at the end of arguments line
-    cmp al, " "
+    cmp al,0
     je a2_end
-    ; cmp al,0
-    ; je a2_end
     cmp al,10
     je a2_end
     cmp al,13
     je a2_end
     cmp al,3
     je a2_end
-	; Ensure no bufferoverflow in text var
-    ; cmp di,TEXT_SIZE_C
-    ; jge a2_end
-	
-	; Copy char read to var
-    ; mov	byte ptr es:[si],al
+
 	; Print read char 
-	push bx
-	; push bp
 	mov bl, al 
 	call print_char
-	; pop bp 
-	pop bx
 
 	inc	bp 
 	inc	si 
-	; inc di
-
 	loop	a2_start
 a2_end:
-	; Terminate read string
-    mov	byte ptr es:[si],"$"
+
 ; --------------------
 	; mov bx, "c"
 	; call print_char
@@ -286,6 +266,7 @@ a2_end:
 	; jmp exit
 ; ####################
 ; --------------------
+
 exit:
 	; Wait for any key
 	xor	ax,ax
@@ -386,7 +367,6 @@ check_bits_end:
 	pop dx 
 	pop cx 
 	pop ax 
-
 	ret
 ; --------------------
  badargs:
