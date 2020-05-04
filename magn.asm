@@ -7,6 +7,9 @@ TEXT_SIZE_C 	equ 511
 SCREEN_WIDTH 	equ 320
 SCREEN_HEIGHT	equ 200
 CHAR_LEN		equ 8
+TEXT_COLOR 		equ 15 
+START_X			equ 0
+START_Y			equ 0
 
 data1 segment
     zoom 	db 1 dup('$')
@@ -245,30 +248,30 @@ a2_end:
 	; Terminate read string
     mov	byte ptr es:[si],"$"
 ; --------------------
-	mov ax, CHAR_LEN
-	mov bx, "a"
-	mul bx
-	add ax, offset ascii
-	mov dx,offset ascii
-	mov ax, seg rend_char
+	; mov ax, CHAR_LEN
+	; mov bx, "a"
+	; mul bx
+	; add ax, offset ascii
+	; mov dx,offset ascii
+	; mov ax, seg rend_char
 
-    mov ds,ax
-    mov ah,9
-    int 21h
-	jmp exit
+    ; mov ds,ax
+    ; mov ah,9
+    ; int 21h
+	; jmp exit
 
 
 ; --------------------
 	; Set starting point for drawing
-	mov	word ptr cs:[x],10
-	mov	word ptr cs:[y],100
+	mov	word ptr cs:[x],START_X
+	mov	word ptr cs:[y],START_Y
 	; Set color
-	mov	byte ptr cs:[kol],13
+	mov	byte ptr cs:[color],TEXT_COLOR
  
 	; Set cx pixels on 
 	mov	cx,200
 p1:	push	cx
-	call	zapal_punkt
+	call	set_pixel_on
 	inc	word ptr cs:[x]
 	pop	cx
 	loop	p1
@@ -289,11 +292,12 @@ exit_now:
 	mov	ah,4ch  
 	int	021h
 ; --------------------
-x	dw	0
-y	dw	0
-kol	db	0
+; Local variables in CS for set_pixel_on procedure
+x		dw	0
+y		dw	0
+color	db	0
  
-zapal_punkt:
+set_pixel_on:
 	; Graphic memory segment address
 	mov	ax,0a000h  
 	mov	es,ax
@@ -303,8 +307,9 @@ zapal_punkt:
 	mul	bx	; dx:ax = ax * bx
 	add	ax,word ptr cs:[x]   ;ax = 320*y +x
 	mov	bx,ax
-	mov	al,byte ptr cs:[kol]
-	mov	byte ptr es:[bx],al
+	mov	al,byte ptr cs:[color]
+	; es:[320 * y + x] = color
+	mov	byte ptr es:[bx],al 
 	ret
 ; --------------------
  badargs:
